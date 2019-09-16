@@ -19,6 +19,7 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    @yield('style')
 </head>
 <body>
 <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
@@ -83,6 +84,17 @@
 </nav>
 
 <main class="py-4">
+    <div>
+        @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+    </div>
     @yield('content')
 </main>
 </div>
