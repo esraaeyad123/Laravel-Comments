@@ -6,6 +6,8 @@ use Image;
 use Illuminate\Support\Facades\Input;
 use  App\Post;
 use  App\User;
+use Illuminate\Support\Facades\Storage;
+
 
 
 
@@ -18,7 +20,7 @@ class ImageController extends Controller
      */
     public function index(Request $request)
     {
-$allpost=Post::all();
+        $allpost=Post::all();
         return view('image')->with('$allpost');
     }
     /**
@@ -38,8 +40,56 @@ $allpost=Post::all();
      * @return \Illuminate\Http\Response
      */
 
-
     public function store(Request $request)
+    {
+        $dim_rule = 'required|integer';
+        $validatedData = $request->validate([
+                'description'   => 'required|max:255',
+                'profile_image' => 'mimes:jpeg,png|max:2000', 
+                // we took the most common type of images, also we setup the max size as 2MB 
+                'x1'            => $dim_rule,
+                'y1'            => $dim_rule,
+                'w'             => $dim_rule,
+                'h'             => $dim_rule,
+            ]);
+        // if there is something wrong with the validation it will return the user back with the errors, 
+        // I added the in the  layouts/app.blade.php the code that will show the errors if any. 
+
+        if ($request->file('profile_image')->isValid()) // to make sure that it was uploaded to the server correctly 
+        {
+            $path = $request->profile_image->store('profile_images', 'public'); // see type of disks in config/filesystm.php
+        }
+
+        $croppath = public_path('storage/cropped/profile_images/');
+
+        if (!file_exists($croppath)) {
+            mkdir($croppath, 0777, true);
+        }
+        $img = Image::make( public_path('storage/') .  $path); 
+
+
+        $img->crop($request->input('w'), $request->input('h'), $request->input('x1'), $request->input('y1'));
+        
+        $img->save($croppath .'/'. $request->profile_image->hashName()); 
+        // we save the file to another location BUT with the same name so we can keep the orgoinal file 
+
+       $post = new Post();
+
+       $post->description = $request->description;
+       $post->user_id     = auth()->user()->id;
+       $post->image       = $path;
+
+       if ($post->save()) 
+       {
+           return redirect()->back()->with('success', 'post has been created successfully');
+       } 
+
+       return redirect()->back()->with('success', 'something went wrong');
+       
+            
+    }
+
+    public function old_store(Request $request)
     {
         if($request->isMethod('post')){
             $data=$request->all();

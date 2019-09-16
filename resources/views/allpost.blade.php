@@ -24,7 +24,7 @@
         @foreach($posts as $post)
 
             <div class="img-box">
-                <img src="{{$post->image}}" alt="" />
+                <img src="{{ asset('storage/cropped/'.$post->image) }}" alt="" />
                 <div class="transparent-box">
                     <div class="caption">
                         <p>{{$post->description}}</p>
